@@ -28,7 +28,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-linear-to-br from-white via-emerald-50/30 to-white`}
       >
-        <Navbar />
+        
         <main className="pb-12">
           {children}
         </main>
