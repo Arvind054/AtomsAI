@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌿 AtmosAI  
+**Your Personal Environmental Health Assistant**
 
-## Getting Started
+AtmosAI is an intelligent web application that helps users understand how environmental conditions—such as air quality, pollution levels, temperature, humidity, and allergens—impact their personal health. It provides real-time risk analysis, personalized alerts, and actionable precautions to help users stay safe, especially those with respiratory conditions like asthma or allergies.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 🟢 Real-time AQI & Weather Monitoring  
+Fetch live air quality and environmental data based on the user's location.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🧠 Personalized Health Risk Score  
+AI-assisted scoring system that evaluates a user’s risk level (Low → Very High) based on:
+- Current AQI  
+- Weather conditions  
+- Personal health history (e.g., asthma, allergies, sensitivity level)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 💡 Smart Recommendations  
+Context-aware environmental health tips such as:
+- When to avoid outdoor activities  
+- Mask recommendations  
+- How to reduce exposure  
+- Precautions during high-pollution days  
 
-## Learn More
+### 🔔 Alerts & Notifications  
+Get alerts when pollution levels rise or when the user’s risk score increases above a safe threshold.
 
-To learn more about Next.js, take a look at the following resources:
+### 🌱 Clean, Eco-themed UI  
+A modern, minimal, green-themed interface designed for clarity and ease of use.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🧱 Tech Stack
 
-## Deploy on Vercel
+- **Frontend:** Next.js / React  
+- **Backend:** Node.js, Express or Next.js API Routes  
+- **Database:** MongoDB / Supabase / Firebase  
+- **APIs:** AQI, Weather, Environmental APIs  
+- **AI Engine:** Rule-based or ML-powered health risk model  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎯 Purpose
+
+AtmosAI helps users, especially those with sensitive respiratory conditions, make informed decisions about stepping outside. By translating raw environmental data into meaningful health insights, it promotes safer, healthier living.
+
+---
+
+## 🟢 Vision
+
+To create a globally accessible platform that connects **environment → personal health → intelligent insights**, empowering individuals to protect their well-being through clean technology.
+
+---
+
+## 📌 Roadmap (Upcoming)
+
+- Mobile app support  
+- Predictive 24-hour pollution forecasting  
+- Pollen and allergen tracking  
+- Community health analytics  
+- Wearable device integration  
+
+---
+
+## 🤝 Contributing
+
+Contributions, suggestions, and feature ideas are welcome.  
+Feel free to open issues or submit pull requests!
+
+---
+
+## 📄 License
+
+MIT License © 2025 AtmosAI
+
