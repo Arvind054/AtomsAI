@@ -95,16 +95,16 @@ const advantages = [
 
 export default function StartPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-emerald-50/30 to-white">
+    <div className="min-h-screen bg-linear-to-b from-white via-emerald-50/30 to-white">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/start" className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary shadow-lg">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-secondary shadow-lg">
                 <Leaf className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
                 AtmosAI
               </span>
             </Link>
@@ -124,7 +124,7 @@ export default function StartPage() {
             </Badge>
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
               Your Personal
-              <span className="block bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="block bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Air Quality Guardian
               </span>
             </h1>
@@ -154,7 +154,7 @@ export default function StartPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-gradient-to-r from-primary to-secondary">
+      <section className="py-16 bg-linear-to-r from-primary to-secondary">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat, index) => (
@@ -188,7 +188,7 @@ export default function StartPage() {
             {features.map((feature, index) => (
               <Card key={index} className="border-0 bg-white shadow-lg hover:shadow-xl transition-shadow group">
                 <CardContent className="p-6">
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 group-hover:from-primary group-hover:to-secondary transition-colors">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-secondary/10 group-hover:from-primary group-hover:to-secondary transition-colors">
                     <feature.icon className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
@@ -252,7 +252,7 @@ export default function StartPage() {
               </ul>
             </div>
             <div className="relative">
-              <div className="rounded-3xl bg-gradient-to-br from-primary to-secondary p-8 text-white shadow-2xl">
+              <div className="rounded-3xl bg-linear-to-br from-primary to-secondary p-8 text-white shadow-2xl">
                 <div className="mb-6">
                   <div className="text-sm text-emerald-200 mb-1">Current AQI</div>
                   <div className="text-5xl font-bold">142</div>
@@ -287,10 +287,10 @@ export default function StartPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 to-gray-800">
+      <section className="py-20 bg-linear-to-br from-gray-900 to-gray-800">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <div className="flex justify-center mb-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-secondary shadow-lg">
               <Leaf className="h-8 w-8 text-white" />
             </div>
           </div>
@@ -322,7 +322,7 @@ export default function StartPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-secondary">
                 <Leaf className="h-4 w-4 text-white" />
               </div>
               <span className="text-lg font-bold text-white">AtmosAI</span>

@@ -7,6 +7,7 @@ import { WeatherCard } from "@/components/weather-card"
 import { AQICard } from "@/components/aqi-card"
 import { RiskScoreCard } from "@/components/risk-score-card"
 import { SuggestionList, mockSuggestions } from "@/components/suggestion-list"
+import { HealthRisks, mockHealthRisks } from "@/components/health-risks"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Navbar } from "@/components/navbar"
@@ -146,6 +147,11 @@ export default function Home() {
 
         {/* Suggestions Section */}
         <SuggestionList suggestions={mockSuggestions} />
+
+        {/* Health Risks Section */}
+        <div className="mt-8">
+          <HealthRisks risks={mockHealthRisks} />
+        </div>
       </Container>
     </div>
     </>

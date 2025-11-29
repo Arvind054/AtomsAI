@@ -26,10 +26,10 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary shadow-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-secondary shadow-lg">
               <Leaf className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
               AtmosAI
             </span>
           </Link>
@@ -64,7 +64,7 @@ export function Navbar() {
             <SheetContent side="right" className="w-72">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-secondary">
                     <Leaf className="h-4 w-4 text-white" />
                   </div>
                   AtmosAI
