@@ -9,7 +9,7 @@ import { RiskScoreCard } from "@/components/risk-score-card"
 import { SuggestionList, mockSuggestions } from "@/components/suggestion-list"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
+import { Navbar } from "@/components/navbar"
 // Mock data - in a real app, this would come from an API
 const mockWeatherData = {
   temperature: 28,
@@ -71,6 +71,8 @@ export default function Home() {
   }
 
   return (
+    <>
+    <Navbar />
     <div className="min-h-screen">
       <Container className="py-8">
         {/* Header Section */}
@@ -146,5 +148,6 @@ export default function Home() {
         <SuggestionList suggestions={mockSuggestions} />
       </Container>
     </div>
+    </>
   )
 }
