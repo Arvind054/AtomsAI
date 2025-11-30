@@ -108,9 +108,14 @@ export default function StartPage() {
                 AtmosAI
               </span>
             </Link>
-            <Link href="/">
-              <Button>Get Started Free</Button>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/login">
+                <Button variant="ghost">Sign In</Button>
+              </Link>
+              <Link href="/signup">
+                <Button>Get Started Free</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
@@ -133,7 +138,7 @@ export default function StartPage() {
               and provide personalized recommendations to keep you and your family safe.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/">
+              <Link href="/signup">
                 <Button size="lg" className="gap-2 text-base px-8 py-6 rounded-full shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all">
                   Get Started Free
                   <ArrowRight className="h-5 w-5" />
@@ -302,15 +307,15 @@ export default function StartPage() {
             Free to use, no credit card required.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/">
+            <Link href="/signup">
               <Button size="lg" className="gap-2 text-base px-8 py-6 rounded-full shadow-lg shadow-primary/30">
                 Get Started Free
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/profile">
+            <Link href="/login">
               <Button size="lg" variant="outline" className="gap-2 text-base px-8 py-6 rounded-full border-gray-600 text-gray-300 hover:bg-gray-800">
-                Create Profile
+                Sign In
               </Button>
             </Link>
           </div>
