@@ -2,10 +2,13 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Leaf, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { authClient } from "@/lib/auth-client"
+import { toast } from "sonner"
 
 // Social login icons as SVG components
 function GoogleIcon({ className }: { className?: string }) {
@@ -56,14 +59,25 @@ interface AuthPageProps {
 
 export function AuthPage({ mode }: AuthPageProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
 
-  const handleSocialLogin = async (provider: string) => {
+  const handleSocialLogin = async (provider: "google" | "microsoft" | "apple") => {
     setIsLoading(provider)
-    // Simulate authentication delay
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    // In a real app, you would integrate with authentication providers here
-    // For now, redirect to dashboard after "login"
-    window.location.href = "/"
+    
+    try {
+      await authClient.signIn.social({
+        provider,
+        callbackURL: callbackUrl,
+      })
+    } catch (error) {
+      console.error("Authentication error:", error)
+      toast.error("Authentication failed", {
+        description: "Please try again or use a different provider.",
+      })
+      setIsLoading(null)
+    }
   }
 
   const isLogin = mode === "login"
@@ -80,7 +94,7 @@ export function AuthPage({ mode }: AuthPageProps) {
       {/* Header */}
       <header className="w-full p-4">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
-          <Link href="/start" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-secondary shadow-lg">
               <Leaf className="h-5 w-5 text-white" />
             </div>
@@ -88,7 +102,7 @@ export function AuthPage({ mode }: AuthPageProps) {
               AtmosAI
             </span>
           </Link>
-          <Link href="/start">
+          <Link href="/">
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Home

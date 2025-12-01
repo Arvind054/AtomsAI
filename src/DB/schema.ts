@@ -2,7 +2,7 @@ import { pgTable, uuid, text, boolean, integer, jsonb, timestamp, index } from "
 import { relations } from "drizzle-orm";
 
 export const user = pgTable("user", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
@@ -12,15 +12,15 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-  location: text("location").notNull(),
+  location: text("location"),
   pastIllness: text("past_illness").array().default([]),
-  habits:  jsonb("habits").notNull().default({
-  smoking: false,
-  alcohol: "none",
-  exercise_level: "medium",
-  outdoor_exposure: "moderate",
-  mask_usage: "sometimes",
-}),
+  habits: jsonb("habits").default({
+    smoking: false,
+    alcohol: "none",
+    exercise_level: "medium",
+    outdoor_exposure: "moderate",
+    mask_usage: "sometimes",
+  }),
   alertsEnabled: boolean("alerts_enabled").default(true),
   age: integer("age"),
 });
