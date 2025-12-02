@@ -69,7 +69,9 @@ export function RiskScoreCard({ score, reason }: RiskScoreCardProps) {
               <span className={`text-4xl font-bold ${riskLevel.textColor}`}>{score}</span>
               <span className="mb-1 text-lg text-gray-400">/100</span>
             </div>
-            <p className="text-sm text-gray-600">{reason}</p>
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {reason.length > 80 ? `${reason.slice(0, 80)}...` : reason}
+            </p>
           </div>
         </div>
 

@@ -10,7 +10,7 @@ export default function ProfilePage() {
       <Container className="py-8">
         {/* Back Navigation */}
         <div className="mb-6">
-          <Link href="/">
+          <Link href="/dashboard">
             <Button variant="ghost" className="gap-2 text-gray-600 hover:text-primary">
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard

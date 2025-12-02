@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Build the prompt
     const userHealthContext = userProfile ? `
 User Health Profile:
-- Age: ${userProfile.age || "Not specified"}
+- Age: ${ userProfile.age || "Not specified"}
 - Health Conditions: ${userProfile.pastIllness?.length ? userProfile.pastIllness.join(", ") : "None specified"}
 - Smoker: ${userProfile.habits?.smoking ? "Yes" : "No"}
 - Exercise Level: ${userProfile.habits?.exercise_level || "Medium"}
@@ -91,7 +91,7 @@ Priority guidelines:
 - medium: AQI 100-150 or moderate health concerns
 - low: AQI < 100 or general wellness tips
 
-For the riskScore, calculate a score from 0-100 based on AQI level, weather conditions, and user's health vulnerabilities.
+For the riskScore, calculate a score from 0-100 based on AQI level and weather conditions. Keep the reason SHORT (max 10 words, e.g., "AQI 150 - Unhealthy for sensitive groups").
 
 For healthRisks, identify 2-4 specific health conditions that may be affected (e.g., Respiratory Health, Cardiovascular Health, Allergies, Skin Health).
 
@@ -107,19 +107,16 @@ Respond with ONLY valid JSON in this exact format:
     { "id": "1", "condition": "Condition name", "risk": "low|medium|high", "description": "Description" }
   ]
 }`
-
+  
     try {
       // Get the generative model
       const model = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash-exp",
-        generationConfig: {
-          responseMimeType: "application/json",
-        },
+        model: "gemini-2.5-flash",
       })
+     const result = await model.generateContent(prompt);
+     const response = result.response
+     const text = response.text()
 
-      const result = await model.generateContent(prompt)
-      const response = result.response
-      const text = response.text()
 
       if (!text) {
         console.error("No response text from Gemini")
@@ -246,7 +243,7 @@ function getFallbackSuggestions(weather: WeatherData, aqi: AQIData, userProfile?
     suggestions: suggestions.slice(0, 5),
     riskScore: {
       score: Math.min(Math.round(aqi.value * 0.5 + (hasRespiratoryConditions ? 20 : 0)), 100),
-      reason: `Based on AQI of ${aqi.value} (${aqi.category})${hasRespiratoryConditions ? " and your respiratory health history" : ""}`,
+      reason: `AQI ${aqi.value} - ${aqi.category}`,
     },
     healthRisks: [
       {

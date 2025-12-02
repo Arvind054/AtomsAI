@@ -137,34 +137,28 @@ export function AuthPage({ mode }: AuthPageProps) {
               Continue with Google
             </Button>
 
-            {/* Microsoft Login */}
+            {/* Microsoft Login - Temporarily Disabled */}
             <Button
               variant="outline"
-              className="w-full h-12 text-base font-medium gap-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all"
-              onClick={() => handleSocialLogin("microsoft")}
-              disabled={isLoading !== null}
+              className="w-full h-12 text-base font-medium gap-3 rounded-xl opacity-50 cursor-not-allowed"
+              disabled
+              title="Coming soon"
             >
-              {isLoading === "microsoft" ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <MicrosoftIcon className="h-5 w-5" />
-              )}
+              <MicrosoftIcon className="h-5 w-5" />
               Continue with Microsoft
+              <span className="ml-auto text-xs text-gray-400">Soon</span>
             </Button>
 
-            {/* Apple Login */}
+            {/* Apple Login - Temporarily Disabled */}
             <Button
               variant="outline"
-              className="w-full h-12 text-base font-medium gap-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all"
-              onClick={() => handleSocialLogin("apple")}
-              disabled={isLoading !== null}
+              className="w-full h-12 text-base font-medium gap-3 rounded-xl opacity-50 cursor-not-allowed"
+              disabled
+              title="Coming soon"
             >
-              {isLoading === "apple" ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <AppleIcon className="h-5 w-5" />
-              )}
+              <AppleIcon className="h-5 w-5" />
               Continue with Apple
+              <span className="ml-auto text-xs text-gray-400">Soon</span>
             </Button>
 
             <div className="relative my-6">

@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
   // Load profile from localStorage (may override detected location if saved)
   useEffect(() => {
-    const savedProfile = localStorage.getItem("atmosai-profile")
+    const savedProfile = localStorage.getItem("atmosai-profile");
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile)
@@ -106,7 +106,8 @@ export default function DashboardPage() {
     suggestions,
     riskScore,
     healthRisks,
-    isLoading,
+    isLoadingWeather,
+    isLoadingSuggestions,
     error,
     refresh,
   } = useEnvironmentalData(userLocation, memoizedProfile, userCoords)
@@ -114,6 +115,8 @@ export default function DashboardPage() {
   const handleRefresh = () => {
     refresh()
   }
+
+  const isLoading = isLoadingWeather || isLoadingSuggestions
 
   return (
     <>
@@ -189,12 +192,12 @@ export default function DashboardPage() {
           </Alert>
         )}
 
-        {/* Loading State */}
-        {isLoading && !weather && (
+        {/* Loading State for Weather */}
+        {isLoadingWeather && !weather && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-gray-500">Fetching environmental data...</p>
+              <p className="text-gray-500">Fetching weather data...</p>
             </div>
           </div>
         )}
@@ -216,7 +219,7 @@ export default function DashboardPage() {
               />
               <RiskScoreCard 
                 score={riskScore?.score || Math.min(Math.round(aqi.value * 0.5), 100)}
-                reason={riskScore?.reason || `Based on current AQI of ${aqi.value} (${aqi.category})`}
+                reason={riskScore?.reason || `AQI ${aqi.value} - ${aqi.category}`}
               />
             </div>
 
@@ -252,17 +255,40 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Suggestions Section */}
-            {suggestions.length > 0 && (
+            {/* Suggestions Section with Loading State */}
+            {isLoadingSuggestions ? (
+              <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <h3 className="text-lg font-semibold text-gray-900">Generating AI Suggestions...</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                  <div className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                  <div className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                </div>
+              </div>
+            ) : suggestions.length > 0 ? (
               <SuggestionList suggestions={suggestions} />
-            )}
+            ) : null}
 
-            {/* Health Risks Section */}
-            {healthRisks.length > 0 && (
+            {/* Health Risks Section with Loading State */}
+            {isLoadingSuggestions ? (
+              <div className="mt-8 rounded-2xl border bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <h3 className="text-lg font-semibold text-gray-900">Analyzing Health Risks...</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+                  <div className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+                </div>
+              </div>
+            ) : healthRisks.length > 0 ? (
               <div className="mt-8">
                 <HealthRisks risks={healthRisks} />
               </div>
-            )}
+            ) : null}
           </>
         )}
       </Container>

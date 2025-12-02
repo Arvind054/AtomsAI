@@ -66,8 +66,19 @@ export async function GET(request: NextRequest) {
       latitude = parseFloat(lat)
       longitude = parseFloat(lon)
     } else {
-      // Extract city name from location string (take first part before comma)
-      const searchQuery = location!.split(",")[0].trim()
+      // Extract city name from location string - try multiple approaches
+      let searchQuery = location!.split(",")[0].trim()
+      
+      // Remove common suffixes that confuse geocoding
+      searchQuery = searchQuery
+        .replace(/\s*(Municipal Corporation|Corporation|Municipality|District|Division|Tehsil|Taluka|Block)\s*/gi, '')
+        .trim()
+      
+      // If still empty, use original first part
+      if (!searchQuery) {
+        searchQuery = location!.split(",")[0].trim()
+      }
+      
       console.log("Geocoding search query:", searchQuery)
       
       // Geocode the location using Open-Meteo Geocoding API
@@ -88,20 +99,33 @@ export async function GET(request: NextRequest) {
       console.log("Geocoding response:", JSON.stringify(geoData))
       
       if (!geoData.results || geoData.results.length === 0) {
-        // Try with full location string as fallback
-        const fallbackUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location!)}&count=1&language=en&format=json`
-        const fallbackResponse = await fetch(fallbackUrl)
-        const fallbackData = await fallbackResponse.json()
+        // Try with just the first word (often the city name)
+        const firstWord = searchQuery.split(/\s+/)[0]
+        console.log("Trying first word:", firstWord)
         
-        if (!fallbackData.results || fallbackData.results.length === 0) {
-          return NextResponse.json(
-            { error: `Location not found: ${location}` },
-            { status: 404 }
-          )
+        const firstWordUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(firstWord)}&count=1&language=en&format=json`
+        const firstWordResponse = await fetch(firstWordUrl)
+        const firstWordData = await firstWordResponse.json()
+        
+        if (firstWordData.results && firstWordData.results.length > 0) {
+          latitude = firstWordData.results[0].latitude
+          longitude = firstWordData.results[0].longitude
+        } else {
+          // Try with full location string as final fallback
+          const fallbackUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location!)}&count=1&language=en&format=json`
+          const fallbackResponse = await fetch(fallbackUrl)
+          const fallbackData = await fallbackResponse.json()
+          
+          if (!fallbackData.results || fallbackData.results.length === 0) {
+            // Last resort: use a default location (Delhi) and log warning
+            console.warn(`Location not found: ${location}, using default coordinates`)
+            latitude = 28.6139  // Delhi
+            longitude = 77.2090
+          } else {
+            latitude = fallbackData.results[0].latitude
+            longitude = fallbackData.results[0].longitude
+          }
         }
-        
-        latitude = fallbackData.results[0].latitude
-        longitude = fallbackData.results[0].longitude
       } else {
         latitude = geoData.results[0].latitude
         longitude = geoData.results[0].longitude

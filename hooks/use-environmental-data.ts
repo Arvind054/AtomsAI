@@ -67,7 +67,8 @@ interface EnvironmentalData {
   suggestions: Suggestion[]
   riskScore: RiskScore | null
   healthRisks: HealthRisk[]
-  isLoading: boolean
+  isLoadingWeather: boolean
+  isLoadingSuggestions: boolean
   error: string | null
 }
 
@@ -82,14 +83,15 @@ export function useEnvironmentalData(
     suggestions: [],
     riskScore: null,
     healthRisks: [],
-    isLoading: false,
+    isLoadingWeather: false,
+    isLoadingSuggestions: false,
     error: null,
   })
 
   const fetchData = useCallback(async () => {
     if (!location && !coordinates) return
 
-    setData((prev) => ({ ...prev, isLoading: true, error: null }))
+    setData((prev) => ({ ...prev, isLoadingWeather: true, isLoadingSuggestions: true, error: null }))
 
     try {
       // Build the URL - prefer coordinates if available
@@ -100,16 +102,26 @@ export function useEnvironmentalData(
         weatherUrl += `location=${encodeURIComponent(location)}`
       }
 
-      // Fetch weather and AQI data
+      // Fetch weather and AQI data first
       const weatherResponse = await fetch(weatherUrl)
       
       if (!weatherResponse.ok) {
-        throw new Error("Failed to fetch weather data")
+        const errorData = await weatherResponse.json().catch(() => ({}))
+        console.error("Weather API error:", weatherResponse.status, errorData)
+        throw new Error(errorData.error || `Failed to fetch weather data (${weatherResponse.status})`)
       }
 
       const weatherData = await weatherResponse.json()
 
-      // Fetch AI-powered suggestions
+      // Update weather data immediately and show it
+      setData((prev) => ({
+        ...prev,
+        weather: weatherData.weather,
+        aqi: weatherData.aqi,
+        isLoadingWeather: false,
+      }))
+
+      // Now fetch AI-powered suggestions (in background)
       const suggestionsResponse = await fetch("/api/suggestions", {
         method: "POST",
         headers: {
@@ -133,20 +145,19 @@ export function useEnvironmentalData(
         healthRisks = suggestionsData.healthRisks || []
       }
 
-      setData({
-        weather: weatherData.weather,
-        aqi: weatherData.aqi,
+      setData((prev) => ({
+        ...prev,
         suggestions,
         riskScore,
         healthRisks,
-        isLoading: false,
-        error: null,
-      })
+        isLoadingSuggestions: false,
+      }))
     } catch (error) {
       console.error("Error fetching environmental data:", error)
       setData((prev) => ({
         ...prev,
-        isLoading: false,
+        isLoadingWeather: false,
+        isLoadingSuggestions: false,
         error: error instanceof Error ? error.message : "Failed to fetch data",
       }))
     }

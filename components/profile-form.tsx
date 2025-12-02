@@ -73,7 +73,8 @@ export function ProfileForm() {
         try {
           const response = await fetch("/api/profile")
           if (response.ok) {
-            const data = await response.json()
+            const data = await response.json();
+
             setProfile({
               name: data.name || defaultProfile.name,
               age: data.age || defaultProfile.age,

@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
-import { Leaf, Menu, Home, User, MapPin, LogOut, LogIn } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Leaf, Menu, Home, User, MapPin, LogOut, LogIn, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -14,6 +14,8 @@ import {
 import { useSession } from "@/components/session-provider"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
+import { useGeolocation } from "@/hooks/use-geolocation"
+import Image from "next/image"
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -22,7 +24,34 @@ const navLinks = [
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [displayLocation, setDisplayLocation] = useState<string | null>(null)
   const { user, isAuthenticated, isLoading } = useSession()
+  const { location, isLoading: isLoadingLocation, getLocation } = useGeolocation()
+
+  // Get location on mount
+  useEffect(() => {
+    // First check localStorage for saved profile location
+    const savedProfile = localStorage.getItem("atmosai-profile")
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile)
+        if (parsed.location) {
+          setDisplayLocation(parsed.location)
+          return
+        }
+      } catch {
+        // Continue to geolocation
+      }
+    }
+    
+    // If no saved location, detect using geolocation
+    getLocation().then((loc) => {
+      if (loc) {
+        const parts = [loc.city, loc.country].filter(Boolean)
+        setDisplayLocation(parts.length > 0 ? parts.join(", ") : loc.formattedAddress || "Your Location")
+      }
+    })
+  }, [getLocation])
 
   const handleSignOut = async () => {
     try {
@@ -39,6 +68,7 @@ export function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
+
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-secondary shadow-lg">
               <Leaf className="h-5 w-5 text-white" />
@@ -49,6 +79,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
+
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
@@ -66,21 +97,35 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             {/* Location Badge */}
             <div className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">New Delhi, India</span>
+              {isLoadingLocation ? (
+                <Loader2 className="h-4 w-4 text-primary animate-spin" />
+              ) : (
+                <MapPin className="h-4 w-4 text-primary" />
+              )}
+              <span className="text-sm font-medium text-primary max-w-[150px] truncate">
+                {isLoadingLocation ? "Detecting..." : (displayLocation || "Set Location")}
+              </span>
             </div>
 
             {/* Auth Button */}
             {!isLoading && (
               isAuthenticated ? (
                 <div className="flex items-center gap-3">
-                  {user?.image && (
-                    <img
-                      src={user.image}
-                      alt={user.name || "User"}
-                      className="h-8 w-8 rounded-full border-2 border-primary/20"
-                    />
-                  )}
+                  <Link href="/profile" className="block">
+                    {user?.image ? (
+                      <Image
+                        src={user.image}
+                        alt={user.name || "User"}
+                        width={9}
+                        height={9}
+                        className="h-9 w-9 rounded-full border-2 border-primary/20 hover:border-primary transition-colors cursor-pointer"
+                      />
+                    ) : (
+                      <div className="h-9 w-9 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center hover:border-primary transition-colors cursor-pointer">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                    )}
+                  </Link>
                   <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -116,19 +161,27 @@ export function Navbar() {
               <div className="mt-8 flex flex-col gap-4">
                 {/* User Info - Mobile */}
                 {isAuthenticated && user && (
-                  <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3">
-                    {user.image && (
+                  <Link 
+                    href="/profile" 
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3 hover:bg-primary/10 transition-colors"
+                  >
+                    {user.image ? (
                       <img
                         src={user.image}
                         alt={user.name || "User"}
                         className="h-10 w-10 rounded-full border-2 border-primary/20"
                       />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
                     )}
                     <div>
                       <p className="font-medium text-gray-900">{user.name}</p>
                       <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
-                  </div>
+                  </Link>
                 )}
 
                 {navLinks.map((link) => (
@@ -144,8 +197,14 @@ export function Navbar() {
                 ))}
 
                 <div className="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-3">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">New Delhi, India</span>
+                  {isLoadingLocation ? (
+                    <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                  ) : (
+                    <MapPin className="h-4 w-4 text-primary" />
+                  )}
+                  <span className="text-sm font-medium text-primary truncate">
+                    {isLoadingLocation ? "Detecting..." : (displayLocation || "Set Location")}
+                  </span>
                 </div>
 
                 {/* Auth Button - Mobile */}
