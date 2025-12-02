@@ -11,7 +11,11 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Check for session token (better-auth stores session in cookies)
-  const sessionToken = request.cookies.get("better-auth.session_token")?.value
+  // Check both possible cookie names (with and without prefix)
+  const sessionToken = 
+    request.cookies.get("atmosai.session_token")?.value ||
+    request.cookies.get("better-auth.session_token")?.value ||
+    request.cookies.get("__Secure-atmosai.session_token")?.value
   const isAuthenticated = !!sessionToken
 
   // Check if the current path is a protected route
