@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { Leaf, Menu, Home, User, MapPin, LogOut, LogIn, Loader2 } from "lucide-react"
+import { Leaf, Menu, Home, User, MapPin, LogOut, LogIn, Loader2, Map, Bot } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -19,6 +19,8 @@ import Image from "next/image"
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/city-health-map", label: "City Health Map", icon: Map },
+  { href: "/health-assistant", label: "Health Assistant", icon: Bot },
   { href: "/profile", label: "Profile", icon: User },
 ]
 
