@@ -14,7 +14,7 @@ export const auth = betterAuth({
     },
   }),
   
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: process.env.BETTER_AUTH_URL || "https://atoms-ai.vercel.app",
   secret: process.env.BETTER_AUTH_SECRET,
 
   socialProviders: {
