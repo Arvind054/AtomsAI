@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { MapPin, Calendar, Leaf, RefreshCw, Loader2, AlertTriangle, Navigation } from "lucide-react"
+import Link from "next/link"
+import { MapPin, Calendar, Leaf, RefreshCw, Loader2, AlertTriangle, Navigation, MapPinOff, Settings } from "lucide-react"
 import { Container } from "@/components/container"
 import { WeatherCard } from "@/components/weather-card"
 import { AQICard } from "@/components/aqi-card"
@@ -14,6 +15,8 @@ import { Navbar } from "@/components/navbar"
 import { useEnvironmentalData } from "@/hooks/use-environmental-data"
 import { useGeolocation } from "@/hooks/use-geolocation"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useSession } from "@/components/session-provider"
+import { Skeleton } from "@/components/ui/skeleton"
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -47,17 +50,38 @@ interface ProfileData {
 }
 
 export default function DashboardPage() {
-  const [userName, setUserName] = useState("User")
+  const { user, isLoading: sessionLoading } = useSession()
+  const [userName, setUserName] = useState<string | null>(null)
   const [userLocation, setUserLocation] = useState<string | null>(null)
   const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [userProfile, setUserProfile] = useState<ProfileData | null>(null)
   const [locationDetected, setLocationDetected] = useState(false)
+  const [profileLoaded, setProfileLoaded] = useState(false)
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false)
 
-  const { location: geoLocation, isLoading: geoLoading, getLocation } = useGeolocation()
+  const { location: geoLocation, isLoading: geoLoading, error: geoError, getLocation } = useGeolocation()
 
-  // Detect location on mount
+  // Load profile from localStorage first
   useEffect(() => {
-    if (!locationDetected && !geoLoading) {
+    const savedProfile = localStorage.getItem("atmosai-profile");
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile)
+        setUserProfile(parsed)
+        // Use saved location as fallback
+        if (parsed.location) {
+          setUserLocation(parsed.location)
+        }
+      } catch {
+        console.error("Failed to parse profile")
+      }
+    }
+    setProfileLoaded(true)
+  }, [])
+
+  // Detect location on mount (after profile is loaded)
+  useEffect(() => {
+    if (!locationDetected && !geoLoading && profileLoaded) {
       getLocation().then((loc) => {
         if (loc) {
           // Store coordinates for API calls
@@ -66,29 +90,24 @@ export default function DashboardPage() {
           const parts = [loc.city, loc.state, loc.country].filter(Boolean)
           const displayLocation = parts.length > 0 ? parts.join(", ") : loc.formattedAddress || "Your Location"
           setUserLocation(displayLocation)
+          setLocationPermissionDenied(false)
+        } else {
+          // Location denied or failed - check if we have saved location
+          setLocationPermissionDenied(true)
         }
         setLocationDetected(true)
       })
     }
-  }, [locationDetected, geoLoading, getLocation])
+  }, [locationDetected, geoLoading, getLocation, profileLoaded])
 
-  // Load profile from localStorage (may override detected location if saved)
+  // Get user name from session (prioritize session over local storage)
   useEffect(() => {
-    const savedProfile = localStorage.getItem("atmosai-profile");
-    if (savedProfile) {
-      try {
-        const parsed = JSON.parse(savedProfile)
-        if (parsed.name) setUserName(parsed.name)
-        // Only use saved location if we haven't detected one yet or if user explicitly saved it
-        if (parsed.location && !geoLocation) {
-          setUserLocation(parsed.location)
-        }
-        setUserProfile(parsed)
-      } catch {
-        console.error("Failed to parse profile")
-      }
+    if (user?.name) {
+      setUserName(user.name.split(' ')[0]) // Use first name only
+    } else if (userProfile?.name) {
+      setUserName(userProfile.name)
     }
-  }, [geoLocation])
+  }, [user, userProfile])
 
   // Memoize the user profile for the hook to prevent infinite loops
   const memoizedProfile = useMemo(() => {
@@ -100,6 +119,10 @@ export default function DashboardPage() {
     }
   }, [userProfile])
 
+  // Only fetch data when we have location ready
+  const isLocationReady = locationDetected && (userLocation || userCoords)
+  const isUserReady = !sessionLoading
+
   const {
     weather,
     aqi,
@@ -110,13 +133,113 @@ export default function DashboardPage() {
     isLoadingSuggestions,
     error,
     refresh,
-  } = useEnvironmentalData(userLocation, memoizedProfile, userCoords)
+  } = useEnvironmentalData(
+    isLocationReady ? userLocation : null, 
+    memoizedProfile, 
+    isLocationReady ? userCoords : null
+  )
 
   const handleRefresh = () => {
     refresh()
   }
 
+  const handleRetryLocation = () => {
+    setLocationDetected(false)
+    setLocationPermissionDenied(false)
+    getLocation().then((loc) => {
+      if (loc) {
+        setUserCoords({ latitude: loc.latitude, longitude: loc.longitude })
+        const parts = [loc.city, loc.state, loc.country].filter(Boolean)
+        const displayLocation = parts.length > 0 ? parts.join(", ") : loc.formattedAddress || "Your Location"
+        setUserLocation(displayLocation)
+        setLocationPermissionDenied(false)
+      } else {
+        setLocationPermissionDenied(true)
+      }
+      setLocationDetected(true)
+    })
+  }
+
   const isLoading = isLoadingWeather || isLoadingSuggestions
+  const isInitializing = !locationDetected || !profileLoaded || sessionLoading
+  const needsLocation = locationDetected && !userLocation && locationPermissionDenied
+
+  // Show initializing state
+  if (isInitializing) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen">
+          <Container className="py-8">
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-secondary shadow-lg mb-6">
+                <Leaf className="h-8 w-8 text-white" />
+              </div>
+              <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Setting up your dashboard</h2>
+              <p className="text-gray-500 text-center max-w-md">
+                {!profileLoaded ? "Loading your profile..." : 
+                 sessionLoading ? "Checking authentication..." :
+                 geoLoading ? "Detecting your location..." : "Almost ready..."}
+              </p>
+            </div>
+          </Container>
+        </div>
+      </>
+    )
+  }
+
+  // Show location permission required state
+  if (needsLocation) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen">
+          <Container className="py-8">
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-100 mb-6">
+                <MapPinOff className="h-8 w-8 text-orange-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Location Access Required</h2>
+              <p className="text-gray-500 text-center max-w-md mb-6">
+                {geoError || "We need access to your location to provide personalized weather data and health recommendations."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button onClick={handleRetryLocation} className="gap-2">
+                  <Navigation className="h-4 w-4" />
+                  Allow Location Access
+                </Button>
+                <Link href="/profile">
+                  <Button variant="outline" className="gap-2 w-full">
+                    <Settings className="h-4 w-4" />
+                    Set Location Manually
+                  </Button>
+                </Link>
+              </div>
+              {userProfile?.location && (
+                <div className="mt-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <p className="text-sm text-emerald-700 mb-2">
+                    <strong>Or use your saved location:</strong>
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="gap-2 text-emerald-700 hover:bg-emerald-100"
+                    onClick={() => {
+                      setUserLocation(userProfile.location)
+                      setLocationPermissionDenied(false)
+                    }}
+                  >
+                    <MapPin className="h-4 w-4" />
+                    {userProfile.location}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Container>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -136,7 +259,12 @@ export default function DashboardPage() {
                 </Badge>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                {getGreeting()}, <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">{userName}</span>
+                {getGreeting()},{" "}
+                {!userName ? (
+                  <Skeleton className="inline-block h-8 w-32 align-middle" />
+                ) : (
+                  <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">{userName}</span>
+                )}
               </h1>
               <div className="flex flex-wrap items-center gap-4 text-gray-500">
                 <span className="flex items-center gap-1.5">
@@ -144,18 +272,7 @@ export default function DashboardPage() {
                   {formatDate()}
                 </span>
                 <button 
-                  onClick={() => {
-                    setLocationDetected(false)
-                    getLocation().then((loc) => {
-                      if (loc) {
-                        setUserCoords({ latitude: loc.latitude, longitude: loc.longitude })
-                        const parts = [loc.city, loc.state, loc.country].filter(Boolean)
-                        const displayLocation = parts.length > 0 ? parts.join(", ") : loc.formattedAddress || "Your Location"
-                        setUserLocation(displayLocation)
-                      }
-                      setLocationDetected(true)
-                    })
-                  }}
+                  onClick={handleRetryLocation}
                   className="flex items-center gap-1.5 hover:text-primary transition-colors"
                   title="Click to refresh location"
                 >
@@ -171,7 +288,7 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               onClick={handleRefresh}
-              disabled={isLoading}
+              disabled={isLoading || !userLocation}
               className="shrink-0"
             >
               {isLoading ? (
