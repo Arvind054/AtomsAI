@@ -1,130 +1,236 @@
 "use client"
 
-import Link from "next/link"
-import { Bot, ArrowLeft, MessageSquare, Brain, Shield, Sparkles } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Bot, Send, Loader2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Navbar } from "@/components/navbar"
 import { Container } from "@/components/container"
+import { useEnvironmentalData } from "@/hooks/use-environmental-data"
+import { useGeolocation } from "@/hooks/use-geolocation"
+import { useSession } from "@/components/session-provider"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+
+interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  timestamp: Date
+}
 
 export default function HealthAssistantPage() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      role: "assistant",
+      content: "Hi! I'm your personalized health assistant. I can provide advice based on your health profile and current environmental conditions. How can I help you today?",
+      timestamp: new Date(),
+    },
+  ])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { user, isLoading: sessionLoading, isAuthenticated } = useSession()
+  const router = useRouter()
+  const { location: geoLocation, isLoading: geoLoading } = useGeolocation()
+
+  const {
+    weather,
+    aqi,
+    isLoadingWeather,
+    isLoadingSuggestions,
+    error: envError,
+    refresh,
+  } = useEnvironmentalData(
+    geoLocation ? `${geoLocation.city ?? ""}, ${geoLocation.state ?? ""}, ${geoLocation.country ?? ""}` : null,
+    user
+      ? {
+          age: (user as any).age,
+          pastIllness: (user as any).pastIllness,
+          habits: (user as any).habits,
+        }
+      : undefined,
+    geoLocation
+      ? {
+          latitude: geoLocation.latitude,
+          longitude: geoLocation.longitude,
+        }
+      : null,
+  )
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  useEffect(() => {
+    if (!sessionLoading && !isAuthenticated) {
+      toast.error("Please log in to use the health assistant")
+      router.push("/login")
+    }
+  }, [isAuthenticated, sessionLoading, router])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date(),
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    setInput("")
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: userMessage.content,
+          userProfile: user,
+          environmentalData:
+            weather || aqi
+              ? {
+                  weather,
+                  aqi,
+                }
+              : null,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to get response")
+      }
+
+      const data = await response.json()
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.message,
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error("Chat error:", error)
+      toast.error("Failed to get response. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (sessionLoading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-linear-to-br from-white via-emerald-50/30 to-white flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </>
+    )
+  }
+
   return (
-    <>
+    <div className="">
       <Navbar />
-      <div className="min-h-screen bg-linear-to-br from-white via-emerald-50/30 to-white">
-        <Container className="py-16">
-          <div className="flex flex-col items-center justify-center text-center">
-            {/* Icon */}
-            <div className="relative mb-8">
-              <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-linear-to-br from-primary to-secondary shadow-2xl">
-                <Bot className="h-12 w-12 text-white" />
-              </div>
-              <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-white text-xs font-bold shadow-lg">
-                Soon
-              </div>
-            </div>
-
-            {/* Title */}
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Personalized Health Assistant
-            </h1>
-            <p className="text-xl text-gray-500 max-w-2xl mb-8">
-              AI-powered health companion that provides personalized advice based on your health profile and environmental conditions
-            </p>
-
-            {/* Coming Soon Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-6 py-3 mb-12">
-              <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
-              <span className="text-orange-700 font-semibold">Coming Soon</span>
-            </div>
-
-            {/* Feature Preview */}
-            <div className="w-full max-w-4xl">
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-8 mb-8">
-                <h3 className="text-lg font-semibold text-gray-700 mb-6">What to expect</h3>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 mb-3">
-                      <MessageSquare className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <h4 className="font-medium text-gray-900 mb-1">Chat Interface</h4>
-                    <p className="text-sm text-gray-500 text-center">
-                      Natural conversation with your health AI
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 mb-3">
-                      <Brain className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <h4 className="font-medium text-gray-900 mb-1">Smart Analysis</h4>
-                    <p className="text-sm text-gray-500 text-center">
-                      Understands your health conditions
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 mb-3">
-                      <Shield className="h-6 w-6 text-emerald-600" />
-                    </div>
-                    <h4 className="font-medium text-gray-900 mb-1">Daily Alerts</h4>
-                    <p className="text-sm text-gray-500 text-center">
-                      Proactive health notifications
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 mb-3">
-                      <Sparkles className="h-6 w-6 text-amber-600" />
-                    </div>
-                    <h4 className="font-medium text-gray-900 mb-1">Personalized Tips</h4>
-                    <p className="text-sm text-gray-500 text-center">
-                      Tailored recommendations just for you
-                    </p>
-                  </div>
+      <div className="bg-linear-to-br py-8 overflow-y-hidden from-white via-emerald-50/30 to-white">
+        <Container className="">
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-primary to-secondary shadow-lg">
+                  <Bot className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Health Assistant</h1>
+                  <p className="text-sm text-gray-500">AI-powered personalized health advice</p>
                 </div>
               </div>
+              <Button variant="outline" size="sm" onClick={() => router.push("/dashboard")}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+            </div>
 
-              {/* Chat Preview */}
-              <div className="rounded-2xl bg-white border shadow-lg p-6 mb-8 max-w-lg mx-auto">
-                <div className="space-y-4">
+            {/* Chat Container */}
+            <div className="rounded-2xl bg-white border shadow-xl overflow-hidden">
+              {/* Messages */}
+              <div className="h-[calc(100vh-20rem)] overflow-y-auto p-6 space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}
+                  >
+                    {message.role === "assistant" && (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary">
+                        <Bot className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                    <div
+                      className={`rounded-2xl px-4 py-3 max-w-[80%] ${
+                        message.role === "user"
+                          ? "rounded-tr-none bg-linear-to-br from-primary to-secondary text-white"
+                          : "rounded-tl-none bg-gray-100 text-gray-900"
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      <p className={`text-xs mt-1 ${message.role === "user" ? "text-white/70" : "text-gray-500"}`}>
+                        {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {isLoading && (
                   <div className="flex gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary">
                       <Bot className="h-4 w-4 text-white" />
                     </div>
                     <div className="rounded-2xl rounded-tl-none bg-gray-100 px-4 py-3">
-                      <p className="text-sm text-gray-700">
-                        Hi! I&apos;m your health assistant. How can I help you today?
-                      </p>
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
                     </div>
                   </div>
-                  <div className="flex gap-3 justify-end">
-                    <div className="rounded-2xl rounded-tr-none bg-primary px-4 py-3">
-                      <p className="text-sm text-white">
-                        Is it safe to go for a run today?
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
-                      <Bot className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="rounded-2xl rounded-tl-none bg-gray-100 px-4 py-3">
-                      <p className="text-sm text-gray-700">
-                        Based on current AQI (72) and your asthma condition, I&apos;d recommend indoor exercise today...
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
 
-              {/* Back Button */}
-              <Link href="/dashboard">
-                <Button variant="outline" className="gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Dashboard
-                </Button>
-              </Link>
+              {/* Input */}
+              <div className="border-t p-4 bg-gray-50">
+                <form onSubmit={handleSubmit} className="flex gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask about your health, air quality, or get personalized advice..."
+                    className="flex-1"
+                    disabled={isLoading}
+                  />
+                  <Button type="submit" disabled={isLoading || !input.trim()} size="icon">
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </form>
+                {(isLoadingWeather || isLoadingSuggestions || geoLoading) && (
+                  <p className="text-xs text-gray-500 mt-2">Loading environmental data...</p>
+                )}
+              </div>
             </div>
           </div>
         </Container>
       </div>
-    </>
+    </div>
   )
 }
